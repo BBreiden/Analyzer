@@ -8,7 +8,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <DebugType>full</DebugType>
     <LangVersion>latest</LangVersion>
-    <CodeAnalysisRuleSet>..\Core.ruleset</CodeAnalysisRuleSet>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
