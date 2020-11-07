@@ -2,8 +2,10 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Analyzer
@@ -39,18 +41,36 @@ namespace Analyzer
             ReportProjectRefs(proj);
 
             var comp = await CompileProject(proj);
-            RunAnalysis(comp);
+            var result = RunAnalysis(comp);
+
+            Console.WriteLine("===== Summary of dependencies");
+            foreach (var group in result.GroupBy(r => r.from, r => (r.to, r.count)))
+            {
+                Console.WriteLine($"FROM: {group.Key}");
+                foreach (var to in group.OrderByDescending(i => i.count))
+                {
+                    Console.WriteLine($"     \t=>\t{to.count}\t\t{to.to}");
+                }
+            }
         }
 
-        private static void RunAnalysis(Compilation comp)
+        private static List<(string from, string to, int count)> RunAnalysis(Compilation comp)
         {
+            var result = new List<Walker.Reference>();
+
             Console.WriteLine("Running analysis:");
             foreach (var tree in comp.SyntaxTrees)
             {
                 Console.WriteLine($"+++++ {tree.FilePath}");
                 var w = new Walker(comp.GetSemanticModel(tree));
                 w.Visit(tree.GetRoot());
+
+                result.AddRange(w.GetReferences());
             }
+
+            return result.GroupBy(r => (r.From, r.To), r => r.To)
+                .Select(g => (from: g.Key.From, to: g.Key.To, count: g.Count()))
+                .ToList();
         }
 
         private static void ReportProjectRefs(Project proj)
