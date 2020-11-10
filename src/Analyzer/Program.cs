@@ -42,12 +42,30 @@ namespace Analyzer
 
             var comp = await CompileProject(proj);
             var result = RunAnalysis(comp);
-            ShowDetailedResults(result);
+            //ShowResultsByClasses(result);
+            ShowResultsByNamespaces(result);
         }
 
-        private static void ShowDetailedResults(IReadOnlyCollection<Walker.Reference> result)
+        private static void ShowResultsByNamespaces(IReadOnlyCollection<Walker.Reference> result)
         {
-            Console.WriteLine("===== Summary of dependencies");
+            Console.WriteLine("===== Summary of dependencies by namespace");
+            var prep = result.Select(r => (from: r.FromNS, to: r.ToNS))
+               .GroupBy(i => (i.from, i.to))
+               .Select(g => (g.Key.from, g.Key.to, count: g.Count()));
+
+            foreach (var group in prep.GroupBy(r => r.from, r => (r.to, r.count)))
+            {
+                Console.WriteLine($"FROM: {group.Key}");
+                foreach (var to in group.OrderByDescending(i => i.count))
+                {
+                    Console.WriteLine($"     \t=>\t{to.count}\t\t{to.to}");
+                }
+            }
+        }
+
+        private static void ShowResultsByClasses(IReadOnlyCollection<Walker.Reference> result)
+        {
+            Console.WriteLine("===== Summary of dependencies by class");
             var prep = result.Select(r => (from: $"{r.FromNS}.{r.From}", to: $"{r.ToNS}.{r.To}"))
                .GroupBy(i => (i.from, i.to))
                .Select(g => (g.Key.from, g.Key.to, count: g.Count()));

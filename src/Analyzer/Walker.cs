@@ -112,17 +112,23 @@ namespace Analyzer
             var ct = symbol.ContainingType;
             if (ct is null)
             {
-                return GetFullNamespaceName(symbol.ContainingNamespace) + "." + symbol.Name;
+                return GetFullName(symbol.ContainingNamespace) + "." + symbol.Name;
             }
             return FullName(ct) + "." + symbol.Name;
+        }
+
+        private static string GetFullName(ISymbol symbol)
+        {
+            var n = GetFullNamespaceName(symbol);
+            return n == "" ? symbol.Name : n + "." + symbol.Name;
         }
 
         private static string GetFullNamespaceName(ISymbol symbol)
         {
             var cns = symbol.ContainingNamespace;
-            if (cns is null) return symbol.Name;
-            var n = GetFullNamespaceName(cns);
-            return n == "" ? symbol.Name : n + "." + symbol.Name;
+            if (cns is null) return "";
+            var n = GetFullName(cns);
+            return n;
         }
 
         public class Reference
