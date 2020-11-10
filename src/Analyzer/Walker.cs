@@ -29,18 +29,16 @@ namespace Analyzer
             if (!node.IsVar && !(from is null))
             {
                 var symbol = smodel.GetSymbolInfo(node).Symbol;
-                
+
                 if (symbol is null)
                 {
-                    // could be a constant value, e.g. nameof, typeof
-                    var cv = smodel.GetConstantValue(node.Parent);
-                    if (!cv.HasValue)
+                    if (!IsConstantValue(node))
                     {
-                        throw new InvalidOperationException($"Not identified: {node.Identifier} in {node.Parent}");
+                        throw new InvalidOperationException($"Not identified: {node.Identifier} in {node.Parent} at {node.GetLocation().GetLineSpan()}");
                     }
                 }
                 else
-                { 
+                {
                     var to = GetContainingTypeSymbol(symbol);
                     if (to is null)
                     {
@@ -52,6 +50,19 @@ namespace Analyzer
             }
 
             base.VisitIdentifierName(node);
+        }
+
+        private bool IsConstantValue(IdentifierNameSyntax node)
+        {
+            //return smodel.GetConstantValue(node.Parent).HasValue;
+            if (smodel.GetConstantValue(node.Parent).HasValue)
+                return true;
+            var expr = node.FirstAncestorOrSelf<InvocationExpressionSyntax>();
+            if (!(expr is null) && smodel.GetConstantValue(expr).HasValue)
+            {
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
