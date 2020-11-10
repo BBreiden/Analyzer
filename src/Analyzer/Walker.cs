@@ -3,9 +3,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Channels;
 
 namespace Analyzer
 {
@@ -45,7 +42,7 @@ namespace Analyzer
                         throw new InvalidOperationException($"No containing type symbol found: {node.Identifier} in {node.Parent}");
                     }
                     var fromSym = smodel.GetDeclaredSymbol(from);
-                    references.Add(new Reference(FullName(fromSym), FullName(to)));
+                    references.Add(new Reference(fromSym, to));
                 }
             }
 
@@ -130,13 +127,17 @@ namespace Analyzer
 
         public class Reference
         {
-            public Reference(string from, string to)
+            public Reference(INamedTypeSymbol from, INamespaceOrTypeSymbol to)
             {
-                From = from;
-                To = to;
+                FromNS = GetFullNamespaceName(from);
+                From = from.Name;
+                ToNS = GetFullNamespaceName(to);
+                To = to.Name;
             }
 
+            public string FromNS { get; }
             public string From { get; }
+            public string ToNS { get; }
             public string To { get; }
         }
     }

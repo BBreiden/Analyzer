@@ -42,9 +42,17 @@ namespace Analyzer
 
             var comp = await CompileProject(proj);
             var result = RunAnalysis(comp);
+            ShowDetailedResults(result);
+        }
 
+        private static void ShowDetailedResults(IReadOnlyCollection<Walker.Reference> result)
+        {
             Console.WriteLine("===== Summary of dependencies");
-            foreach (var group in result.GroupBy(r => r.from, r => (r.to, r.count)))
+            var prep = result.Select(r => (from: $"{r.FromNS}.{r.From}", to: $"{r.ToNS}.{r.To}"))
+               .GroupBy(i => (i.from, i.to))
+               .Select(g => (g.Key.from, g.Key.to, count: g.Count()));
+
+            foreach (var group in prep.GroupBy(r => r.from, r => (r.to, r.count)))
             {
                 Console.WriteLine($"FROM: {group.Key}");
                 foreach (var to in group.OrderByDescending(i => i.count))
@@ -54,7 +62,7 @@ namespace Analyzer
             }
         }
 
-        private static List<(string from, string to, int count)> RunAnalysis(Compilation comp)
+        private static IReadOnlyCollection<Walker.Reference> RunAnalysis(Compilation comp)
         {
             var result = new List<Walker.Reference>();
 
@@ -68,9 +76,7 @@ namespace Analyzer
                 result.AddRange(w.GetReferences());
             }
 
-            return result.GroupBy(r => (r.From, r.To), r => r.To)
-                .Select(g => (from: g.Key.From, to: g.Key.To, count: g.Count()))
-                .ToList();
+            return result;
         }
 
         private static void ReportProjectRefs(Project proj)
@@ -97,10 +103,10 @@ namespace Analyzer
                     errCount++;
                 }
             };
-            
+
             Console.WriteLine($"Opening project: {path}");
             var proj = await ws.OpenProjectAsync(path);
-            
+
             return (proj, errCount);
         }
 
