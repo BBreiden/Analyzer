@@ -131,14 +131,19 @@ namespace Analyzer
             {
                 FromNS = GetFullNamespaceName(from);
                 From = from.Name;
+                FromAssembly = from.ContainingAssembly.Name;
+
                 ToNS = GetFullNamespaceName(to);
                 To = to.Name;
+                ToAssembly = to.ContainingAssembly.Name;
             }
 
             public string FromNS { get; }
             public string From { get; }
+            public string FromAssembly { get; }
             public string ToNS { get; }
             public string To { get; }
+            public string ToAssembly { get; }
         }
     }
 }
