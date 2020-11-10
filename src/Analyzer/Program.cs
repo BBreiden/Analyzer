@@ -43,7 +43,23 @@ namespace Analyzer
             var comp = await CompileProject(proj);
             var result = RunAnalysis(comp);
             //ShowResultsByClasses(result);
-            ShowResultsByNamespaces(result);
+            //ShowResultsByNamespaces(result);
+            OutputNamespaceGraph(result);
+        }
+
+        private static void OutputNamespaceGraph(IReadOnlyCollection<Walker.Reference> result)
+        {
+            Console.WriteLine("===== Graph of namespaces");
+            var prep = result.Select(r => (from: r.FromNS, to: r.ToNS))
+               .GroupBy(i => (i.from, i.to))
+               .Select(g => (g.Key.from, g.Key.to, count: g.Count()));
+
+            System.Console.WriteLine("digraph {");
+            foreach (var (from, to, _) in prep)
+            {
+                Console.WriteLine($"{from}->{to}");
+            }
+            System.Console.WriteLine("}");
         }
 
         private static void ShowResultsByNamespaces(IReadOnlyCollection<Walker.Reference> result)
