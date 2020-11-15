@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace Analyzer
 {
     class Program
     {
-        static async System.Threading.Tasks.Task Main(string[] args)
+        static async Task Main(string[] args)
         {
             Console.WriteLine("ANALYZER");
             if (args.Length == 0)
@@ -191,10 +192,22 @@ namespace Analyzer
         private static void PrintMSBuildEnv()
         {
             Console.WriteLine("MSBuild environment:");
-            foreach (var env in Environment.GetEnvironmentVariables().Keys)
+            
+            var keys = Environment.GetEnvironmentVariables().Keys.Cast<string>()
+                .Where(k => k.ToString().ToUpper().StartsWith("MSBUILD"))
+                .ToArray();
+            
+            if (keys.Any()) 
+            {
+            foreach (var env in keys)
             {
                 if (env.ToString().ToUpper().StartsWith("MSBUILD"))
                     Console.WriteLine($"    {env} = {Environment.GetEnvironmentVariable(env.ToString())}");
+            }
+            } 
+            else 
+            {
+                System.Console.WriteLine("    <empty>");
             }
         }
     }
